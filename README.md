@@ -12,7 +12,17 @@ node src/index.js examples/sample.diff
 node src/index.js examples/sample.diff --model-command "your-model-wrapper"
 ```
 
-By default this is a deterministic diff curator, not a hidden hosted AI call. Use `--model-command` to pipe structured diff context to your own model wrapper and append model notes.
+By default this is a deterministic diff curator, not a hidden hosted AI call. Use `--model-command` to pipe structured diff context to your own model wrapper and append model notes. The model command runs without a shell.
+
+Example output:
+
+```md
+# Commit
+feat: update src
+
+# Risks
+- Public CLI or entry point changed; run a manual command smoke test.
+```
 
 ## Limits
 

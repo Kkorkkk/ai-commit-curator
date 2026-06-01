@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 export function parseDiff(diff) {
   const files = [];
@@ -42,14 +43,45 @@ export function curate(diff) {
 }
 
 export function curateWithAdapter(diff, command) {
+  const [cmd, ...args] = splitCommand(command);
+  if (!cmd) throw new Error("--model-command requires a command.");
   const context = { files: parseDiff(diff), draft: curate(diff) };
-  const modelNotes = execSync(command, {
+  const result = spawnSync(cmd, args, {
     input: JSON.stringify(context, null, 2),
     encoding: "utf8",
-    stdio: ["pipe", "pipe", "pipe"],
-    shell: true
-  }).trim();
+    stdio: ["pipe", "pipe", "pipe"]
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(`Model command failed with exit ${result.status}: ${result.stderr || result.stdout || ""}`.trim());
+  const modelNotes = result.stdout.trim();
   return modelNotes ? `${context.draft}\n# Model Notes\n\n${modelNotes}\n` : context.draft;
+}
+
+function splitCommand(command) {
+  if (!command || typeof command !== "string") return [];
+  const tokens = [];
+  let current = "";
+  let quote = null;
+  for (let index = 0; index < command.length; index++) {
+    const char = command[index];
+    if (quote) {
+      if (char === "\\") current += command[++index] || "";
+      else if (char === quote) quote = null;
+      else current += char;
+    } else if (char === "'" || char === '"') {
+      quote = char;
+    } else if (/\s/.test(char)) {
+      if (current) {
+        tokens.push(current);
+        current = "";
+      }
+    } else {
+      current += char;
+    }
+  }
+  if (quote) throw new Error("Unclosed quote in command.");
+  if (current) tokens.push(current);
+  return tokens;
 }
 
 async function stdin() {
@@ -61,12 +93,35 @@ async function stdin() {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const file = process.argv[2];
+function flagValue(args, flag) {
+  const index = args.indexOf(flag);
+  if (index === -1) return null;
+  const value = args[index + 1];
+  if (!value || value.startsWith("--")) throw new Error(`${flag} requires a value.`);
+  return value;
+}
+
+export function parseCliArgs(args) {
+  let file = null;
+  for (let index = 0; index < args.length; index++) {
+    if (args[index] === "--model-command") {
+      index++;
+    } else if (!args[index].startsWith("--")) {
+      file = args[index];
+      break;
+    }
+  }
+  return {
+    file,
+    modelCommand: flagValue(args, "--model-command")
+  };
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
+    const { file, modelCommand } = parseCliArgs(process.argv.slice(2));
     const diff = file ? readFileSync(file, "utf8") : await stdin();
-    const adapterIndex = process.argv.indexOf("--model-command");
-    console.log(adapterIndex > -1 ? curateWithAdapter(diff, process.argv[adapterIndex + 1]) : curate(diff));
+    console.log(modelCommand ? curateWithAdapter(diff, modelCommand) : curate(diff));
   } catch (error) {
     console.error(`ai-commit-curator: ${error.message}`);
     process.exit(2);

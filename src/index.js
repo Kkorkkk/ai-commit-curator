@@ -35,6 +35,7 @@ function testHints(files) {
 
 export function curate(diff) {
   const files = parseDiff(diff);
+  if (!files.length) throw new Error("No git diff files found.");
   const areas = [...new Set(files.map((file) => file.to.split("/")[0]))];
   const type = files.some((file) => /test|spec/.test(file.to)) ? "test" : files.some((file) => /readme|docs?/i.test(file.to)) ? "docs" : "feat";
   const subject = areas.length ? `${type}: update ${areas.slice(0, 2).join(" and ")}` : `${type}: update project files`;
@@ -49,7 +50,9 @@ export function curateWithAdapter(diff, command) {
   const result = spawnSync(cmd, args, {
     input: JSON.stringify(context, null, 2),
     encoding: "utf8",
-    stdio: ["pipe", "pipe", "pipe"]
+    stdio: ["pipe", "pipe", "pipe"],
+    timeout: 30_000,
+    maxBuffer: 1_000_000
   });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`Model command failed with exit ${result.status}: ${result.stderr || result.stdout || ""}`.trim());

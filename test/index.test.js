@@ -18,6 +18,7 @@ test("adds contextual risks and optional model notes", () => {
 test("validates model command values and failures", () => {
   assert.throws(() => parseCliArgs(["sample.diff", "--model-command"]), /requires a value/);
   assert.equal(parseCliArgs(["--model-command", "cat"]).file, null);
+  assert.throws(() => curate(""), /No git diff/);
   assert.throws(
     () => curateWithAdapter("diff --git a/a b/a\n+x", "node -e \"process.exit(9)\""),
     /exit 9/

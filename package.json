@@ -1,7 +1,7 @@
 {
   "name": "ai-commit-curator",
   "version": "0.1.0",
-  "description": "Generate commit messages and PR notes from a git diff.",
+  "description": "Generate heuristic commit messages and PR notes from a git diff, with an optional model command.",
   "type": "module",
   "bin": {
     "ai-commit-curator": "./src/index.js"
@@ -13,8 +13,9 @@
   "keywords": [
     "cli",
     "developer-tools",
-    "ai",
-    "github"
+    "git",
+    "commit",
+    "pull-request"
   ],
   "license": "MIT",
   "engines": {

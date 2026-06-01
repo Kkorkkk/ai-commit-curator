@@ -1,0 +1,8 @@
+diff --git a/src/index.js b/src/index.js
+index 111..222 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -1 +1,2 @@
+-console.log("old")
++console.log("new")
++console.log("done")

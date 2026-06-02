@@ -2,6 +2,12 @@
 
 [![CI](https://github.com/Kkorkkk/ai-commit-curator/actions/workflows/ci.yml/badge.svg)](https://github.com/Kkorkkk/ai-commit-curator/actions/workflows/ci.yml)
 
+## Overview / 项目说明
+
+English: AI Commit Curator turns a git diff into a structured commit and PR draft with risk notes and a test plan. The built-in mode is deterministic, and an optional trusted model command can add model-generated review notes without hiding network calls inside the CLI.
+
+中文：AI Commit Curator 会把 git diff 整理成结构化的提交信息和 PR 草稿，并附带风险提示与测试计划。内置模式是确定性的，也可以选择调用你信任的模型命令补充 AI 评审意见，CLI 本身不会偷偷发起托管模型请求。
+
 Summarize a git diff into a Conventional Commit, PR body, risks, and test hints.
 
 ## Install
